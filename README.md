@@ -30,8 +30,8 @@ gcloud beta run deploy demo-app --source . --platform managed --region asia-nort
 ### 2-3. 動作確認
 無事デプロイした後は出力された Service URL に curl でリクエストを投げ、 `Hello World!` と表示されることを確認します
 ```bash
-export SERVICE-URL=<デプロイしたサービスの URL>
-curl ${SERVICE-URL}
+export SERVICE_URL=<デプロイしたサービスの URL>
+curl ${SERVICE_URL}
 ```
 
 ## 3. 認証付きアクセスの構成
@@ -45,10 +45,10 @@ gcloud beta run services update demo-app --platform managed --region asia-northe
 以下コマンドを実行し、認証なしアクセスが拒否されること、Authorization Header を付けるとアクセスが可能となることを確認します
 ```bash
 # アクセスできない
-curl ${SERVICE-URL}
+curl ${SERVICE_URL}
 
 # アクセスできる
-curl ${SERVICE-URL} \
+curl ${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 ```
 
@@ -70,21 +70,21 @@ gcloud beta run deploy demo-app --source . --platform managed --region asia-nort
 新バージョンへ段階的に移行していきます
 ```bash
 # タグ付き URL にアクセスし、新バージョン単体での挙動を確認
-curl green---${SERVICE-URL} \
+curl green---${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
 # 全体トラフィックのうち 30% を新バージョンへ流し、残り 70% を既存サービスへ流す
 gcloud run services update-traffic demo-app --to-tags green=30 --platform managed --region asia-northeast1
 
 # 複数回アクセスし、既存サービスと新バージョンのサービスにアクセスできていることを確認
-curl ${SERVICE-URL} \
+curl ${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
 # 全てのトラフィックを新バージョンへ流す
 gcloud run services update-traffic demo-app --to-tags green=100 --platform managed --region asia-northeast1
 
 # 複数回アクセスし、全て新バージョンのサービスにルーティングされていることを確認
-curl ${SERVICE-URL} \
+curl ${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 ```
 
@@ -99,23 +99,23 @@ gcloud beta run services update demo-app --platform managed --region asia-northe
 Cloud Shell (外部) からのアクセスは拒否され、VPC 内クライアントからのアクセスが許容されることを確認します
 ```bash
 # Cloud Shell (外部) からはアクセス不可
-curl ${SERVICE-URL} \
+curl ${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
 # 同一プロジェクト内 VPC 上の VM からはアクセス可能
 gcloud compute instances create tokyo-client --zone asia-northeast1-a
-gcloud compute ssh tokyo-client --zone asia-northeast1-a -- curl ${SERVICE-URL} -H "Authorization: bearer $(gcloud auth print-identity-token)"
+gcloud compute ssh tokyo-client --zone asia-northeast1-a -- curl ${SERVICE_URL} -H "Authorization: bearer $(gcloud auth print-identity-token)"
 ```
 
 ## 6. Cloud Run のマルチリージョンデプロイ
 ### 6-1. GCLB の準備
 マルチリージョンにデプロイした Cloud Run へのアクセスを捌く GCLB をデプロイします
 ```bash
-export LB-PREFIX="run-demo"
-gcloud compute backend-services create --global ${LB-PREFIX}-bs
-gcloud compute url-maps create --default-service=${LB-PREFIX}-bs ${LB-PREFIX}-um
-gcloud compute target-http-proxies create --url-map=${LB-PREFIX}-um ${LB-PREFIX}-tp
-gcloud compute forwarding-rules create --target-http-proxy=${LB-PREFIX}-tp --global --ports=80 ${LB-PREFIX}-fr
+export LB_PREFIX="run-demo"
+gcloud compute backend-services create --global ${LB_PREFIX}-bs
+gcloud compute url-maps create --default-service=${LB_PREFIX}-bs ${LB_PREFIX}-um
+gcloud compute target-http-proxies create --url-map=${LB_PREFIX}-um ${LB_PREFIX}-tp
+gcloud compute forwarding-rules create --target-http-proxy=${LB_PREFIX}-tp --global --ports=80 ${LB_PREFIX}-fr
 ```
 
 ### 6-2. 別リージョンへのデプロイ
@@ -142,16 +142,16 @@ gcloud compute network-endpoint-groups create run-neg-osaka  --region=asia-north
 ### 6-4. NEG をバックエンドとして追加
 作成した NEG を GCLB バックエンドとして追加します
 ```bash
-gcloud compute backend-services add-backend ${LB-PREFIX}-bs --global --network-endpoint-group=run-neg --network-endpoint-group-region=asia-northeast1
+gcloud compute backend-services add-backend ${LB_PREFIX}-bs --global --network-endpoint-group=run-neg --network-endpoint-group-region=asia-northeast1
 
-gcloud compute backend-services add-backend ${LB-PREFIX}-bs --global --network-endpoint-group=run-neg-osaka --network-endpoint-group-region=asia-northeast2
+gcloud compute backend-services add-backend ${LB_PREFIX}-bs --global --network-endpoint-group=run-neg-osaka --network-endpoint-group-region=asia-northeast2
 ```
 
 ### 6-5. 動作確認
 `asia-northeast1` と `asia-northeast2` のクライアントからそれぞれ同一 IP アドレスにアクセスし、それぞれ地理的に近い Cloud Run サービスにルーティングされることを確認します
 ```bash
 # サービスアクセス用 IP アドレスの取得
-gcloud compute forwarding-rules describe ${LBNAME}-fr --global --format="value(IPAddress)"
+gcloud compute forwarding-rules describe ${LB_PREFIX}-fr --global --format="value(IPAddress)"
 export LBIP=<GCLB IP>
 
 # asia-northeast1 からのアクセス確認
