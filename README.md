@@ -145,7 +145,7 @@ gcloud beta run deploy demo-app-osaka \
 各 Cloud Run サービス用の NEG を作成します
 ```bash
 # asia-northeast1 用 NEG
-gcloud compute network-endpoint-groups create run-neg \
+gcloud compute network-endpoint-groups create run-neg-tokyo \
   --region=asia-northeast1 \
   --network-endpoint-type=SERVERLESS \
   --cloud-run-service=demo-app
@@ -160,11 +160,13 @@ gcloud compute network-endpoint-groups create run-neg-osaka \
 ### 5-4. NEG をバックエンドとして追加
 作成した NEG を GCLB バックエンドとして追加します
 ```bash
+# run-neg-tokyo をバックエンドとして追加
 gcloud compute backend-services add-backend ${LB_PREFIX}-bs \
   --global \
-  --network-endpoint-group=run-neg \
+  --network-endpoint-group=run-neg-tokyo \
   --network-endpoint-group-region=asia-northeast1
 
+# run-neg-osaka をバックエンドとして追加
 gcloud compute backend-services add-backend ${LB_PREFIX}-bs \
   --global \
   --network-endpoint-group=run-neg-osaka \
