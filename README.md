@@ -58,8 +58,10 @@ gcloud beta run deploy demo-app --source . --platform managed --region asia-nort
 ### 3-3. 新バージョンへの段階的移行
 新バージョンへ段階的に移行していきます
 ```bash
+export SERVICE_URL_TAG=<新サービスのタグ付き URL>
+
 # タグ付き URL にアクセスし、新バージョン単体での挙動を確認
-curl green---${SERVICE_URL} \
+curl green---${SERVICE_URL_TAG} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
 # 全体トラフィックのうち 30% を新バージョンへ流し、残り 70% を既存サービスへ流す
