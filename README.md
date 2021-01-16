@@ -25,7 +25,10 @@ cd run-demo
 `--source` を指定し、ソースコードから直接 Cloud Run へデプロイします  
 また、 `--no-allow-unauthenticated` を指定することにより、認証なしのアクセスを禁止します
 ```bash
-gcloud beta run deploy demo-app --source . --platform managed --region asia-northeast1 --no-allow-unauthenticated
+gcloud beta run deploy demo-app --source . \
+  --platform managed \
+  --region asia-northeast1 \
+  --no-allow-unauthenticated
 ```
 
 ### 2-3. 動作確認
@@ -66,14 +69,20 @@ curl ${SERVICE_URL_TAG} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
 # 全体トラフィックのうち 10% を新バージョンへ流し、残り 90% を既存サービスへ流す
-gcloud beta run services update-traffic demo-app --to-tags green=10 --platform managed --region asia-northeast1
+gcloud beta run services update-traffic demo-app \
+  --to-tags green=10 \
+  --platform managed \
+  --region asia-northeast1
 
 # 複数回アクセスし、既存サービスと新バージョンのサービスにアクセスできていることを確認
 curl ${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
 # 全てのトラフィックを新バージョンへ流す
-gcloud beta run services update-traffic demo-app --to-tags green=100 --platform managed --region asia-northeast1
+gcloud beta run services update-traffic demo-app \
+  --to-tags green=100 \
+  --platform managed \
+  --region asia-northeast1
 
 # 複数回アクセスし、全て新バージョンのサービスにルーティングされていることを確認
 curl ${SERVICE_URL} \
@@ -84,7 +93,10 @@ curl ${SERVICE_URL} \
 ### 4-1. GCLB もしくは同一プロジェクト内 VPC からのトラフィックのみ許可
 `--ingress internal-and-cloud-load-balancing` を指定しアップデートすることで、外部からの直アクセスを禁止し、GCLB もしくは同一プロジェクト内 VPC からのトラフィックのみ許可するよう設定します
 ```bash
-gcloud beta run services update demo-app --platform managed --region asia-northeast1 --ingress internal-and-cloud-load-balancing
+gcloud beta run services update demo-app \
+  --platform managed \
+  --region asia-northeast1 \
+  --ingress internal-and-cloud-load-balancing
 ```
 
 ### 4-2. 動作確認
@@ -122,40 +134,58 @@ web.py を編集し、`demo-app-osaka` として asia-northeast2 にデプロイ
 sed -i 's/Hello World! v2/Hello World! v2 Osaka/' web.py
 
 # 編集したコードを asia-northeast2 にデプロイ
-gcloud beta run deploy demo-app-osaka --source . --platform managed --region asia-northeast2 --no-allow-unauthenticated
+gcloud beta run deploy demo-app-osaka \
+  --source . \
+  --platform managed \
+  --region asia-northeast2 \
+  --no-allow-unauthenticated
 ```
 
 ### 5-3. Serverless NEG の作成
 各 Cloud Run サービス用の NEG を作成します
 ```bash
 # asia-northeast1 用 NEG
-gcloud compute network-endpoint-groups create run-neg  --region=asia-northeast1 --network-endpoint-type=SERVERLESS --cloud-run-service=demo-app
+gcloud compute network-endpoint-groups create run-neg \
+  --region=asia-northeast1 \
+  --network-endpoint-type=SERVERLESS \
+  --cloud-run-service=demo-app
 
 # asia-northeast2 用 NEG
-gcloud compute network-endpoint-groups create run-neg-osaka  --region=asia-northeast2 --network-endpoint-type=SERVERLESS --cloud-run-service=demo-app-osaka
+gcloud compute network-endpoint-groups create run-neg-osaka \
+  --region=asia-northeast2 \
+  --network-endpoint-type=SERVERLESS \
+  --cloud-run-service=demo-app-osaka
 ```
 
 ### 5-4. NEG をバックエンドとして追加
 作成した NEG を GCLB バックエンドとして追加します
 ```bash
-gcloud compute backend-services add-backend ${LB_PREFIX}-bs --global --network-endpoint-group=run-neg --network-endpoint-group-region=asia-northeast1
+gcloud compute backend-services add-backend ${LB_PREFIX}-bs \
+  --global \
+  --network-endpoint-group=run-neg \
+  --network-endpoint-group-region=asia-northeast1
 
-gcloud compute backend-services add-backend ${LB_PREFIX}-bs --global --network-endpoint-group=run-neg-osaka --network-endpoint-group-region=asia-northeast2
+gcloud compute backend-services add-backend ${LB_PREFIX}-bs \
+  --global \
+  --network-endpoint-group=run-neg-osaka \
+  --network-endpoint-group-region=asia-northeast2
 ```
 
 ### 5-5. 動作確認
 `asia-northeast1` と `asia-northeast2` のクライアントからそれぞれ同一 IP アドレスにアクセスし、それぞれ地理的に近い Cloud Run サービスにルーティングされることを確認します
 ```bash
 # サービスアクセス用 IP アドレスの取得
-gcloud compute forwarding-rules describe ${LB_PREFIX}-fr --global --format="value(IPAddress)"
+gcloud compute forwarding-rules describe ${LB_PREFIX}-fr \
+  --global \
+  --format="value(IPAddress)"
 
-# asia-northeast1 からのアクセス確認
+# asia-northeast1 からアクセスし `Hello World! v2` と返ってくることを確認
 gcloud compute ssh tokyo-client --zone asia-northeast1-a
 gcloud auth login
 curl <GCLB IP> -H "Authorization: bearer $(gcloud auth print-identity-token)"
 exit
 
-# asia-northeast2 からのアクセス確認
+# asia-northeast1 からアクセスし `Hello World! v2 Osaka` と返ってくることを確認
 gcloud compute instances create osaka-client --zone asia-northeast2-a
 gcloud compute ssh tokyo-client --zone asia-northeast2-a
 gcloud auth login
