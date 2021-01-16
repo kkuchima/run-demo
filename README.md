@@ -185,9 +185,11 @@ gcloud auth login
 curl <GCLB IP> -H "Authorization: bearer $(gcloud auth print-identity-token)"
 exit
 
-# asia-northeast1 からアクセスし `Hello World! v2 Osaka` と返ってくることを確認
+# asia-northeast2 にクライアント用 VM をデプロイ
 gcloud compute instances create osaka-client --zone asia-northeast2-a
-gcloud compute ssh tokyo-client --zone asia-northeast2-a
+
+# asia-northeast2 からアクセスし `Hello World! v2 Osaka` と返ってくることを確認
+gcloud compute ssh osaka-client --zone asia-northeast2-a
 gcloud auth login
 curl <GCLB IP> -H "Authorization: bearer $(gcloud auth print-identity-token)"
 exit
