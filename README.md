@@ -60,18 +60,18 @@ gcloud beta run deploy demo-app --source . --platform managed --region asia-nort
 ```bash
 export SERVICE_URL_TAG=<新サービスのタグ付き URL>
 
-# タグ付き URL にアクセスし、新バージョン単体での挙動を確認
+# タグ付き URL にアクセスし、新バージョン単体での挙動を確認
 curl ${SERVICE_URL_TAG} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
-# 全体トラフィックのうち 30% を新バージョンへ流し、残り 70% を既存サービスへ流す
-gcloud beta run services update-traffic demo-app --to-tags green=30 --platform managed --region asia-northeast1
+# 全体トラフィックのうち 10% を新バージョンへ流し、残り 90% を既存サービスへ流す
+gcloud beta run services update-traffic demo-app --to-tags green=10 --platform managed --region asia-northeast1
 
 # 複数回アクセスし、既存サービスと新バージョンのサービスにアクセスできていることを確認
 curl ${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
-# 全てのトラフィックを新バージョンへ流す
+# 全てのトラフィックを新バージョンへ流す
 gcloud beta run services update-traffic demo-app --to-tags green=100 --platform managed --region asia-northeast1
 
 # 複数回アクセスし、全て新バージョンのサービスにルーティングされていることを確認
