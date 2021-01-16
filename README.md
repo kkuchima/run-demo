@@ -47,9 +47,9 @@ curl ${SERVICE_URL} \
 
 ## 3. アプリケーションの更新
 ### 3-1. web.py の編集
-アクセスすると `Hello World! v2` と返すように web.py を編集します
+アクセスすると `Hello World! Tokyo` と返すように web.py を編集します
 ```bash
-sed -i 's/Hello World!/Hello World! v2/' web.py
+sed -i 's/Hello World!/Hello World! Tokyo/' web.py
 ```
 
 ### 3-2. 更新したサンプルアプリケーションのデプロイ
@@ -131,7 +131,7 @@ gcloud compute forwarding-rules create --target-http-proxy=${LB_PREFIX}-tp --glo
 web.py を編集し、`demo-app-osaka` として asia-northeast2 にデプロイします
 ```bash
 # web.py の編集
-sed -i 's/Hello World! v2/Hello World! v2 Osaka/' web.py
+sed -i 's/Hello World! Tokyo/Hello World! Osaka/' web.py
 
 # 編集したコードを asia-northeast2 にデプロイ
 gcloud beta run deploy demo-app-osaka \
@@ -179,7 +179,7 @@ gcloud compute forwarding-rules describe ${LB_PREFIX}-fr \
   --global \
   --format="value(IPAddress)"
 
-# asia-northeast1 からアクセスし `Hello World! v2` と返ってくることを確認
+# asia-northeast1 からアクセスし `Hello World! Tokyo` と返ってくることを確認
 gcloud compute ssh tokyo-client --zone asia-northeast1-a
 gcloud auth login
 curl <GCLB IP> -H "Authorization: bearer $(gcloud auth print-identity-token)"
@@ -188,7 +188,7 @@ exit
 # asia-northeast2 にクライアント用 VM をデプロイ
 gcloud compute instances create osaka-client --zone asia-northeast2-a
 
-# asia-northeast2 からアクセスし `Hello World! v2 Osaka` と返ってくることを確認
+# asia-northeast2 からアクセスし `Hello World! Osaka` と返ってくることを確認
 gcloud compute ssh osaka-client --zone asia-northeast2-a
 gcloud auth login
 curl <GCLB IP> -H "Authorization: bearer $(gcloud auth print-identity-token)"
