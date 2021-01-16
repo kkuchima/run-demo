@@ -64,15 +64,15 @@ export SERVICE_URL_TAG=<新サービスのタグ付き URL>
 curl ${SERVICE_URL_TAG} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
-# 全体トラフィックのうち 30% を新バージョンへ流し、残り 70% を既存サービスへ流す
-gcloud run services update-traffic demo-app --to-tags green=30 --platform managed --region asia-northeast1
+# 全体トラフィックのうち 30% を新バージョンへ流し、残り 70% を既存サービスへ流す
+gcloud beta run services update-traffic demo-app --to-tags green=30 --platform managed --region asia-northeast1
 
 # 複数回アクセスし、既存サービスと新バージョンのサービスにアクセスできていることを確認
 curl ${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
 # 全てのトラフィックを新バージョンへ流す
-gcloud run services update-traffic demo-app --to-tags green=100 --platform managed --region asia-northeast1
+gcloud beta run services update-traffic demo-app --to-tags green=100 --platform managed --region asia-northeast1
 
 # 複数回アクセスし、全て新バージョンのサービスにルーティングされていることを確認
 curl ${SERVICE_URL} \
