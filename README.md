@@ -45,7 +45,7 @@ curl ${SERVICE_URL} \
 ### 3-1. web.py の編集
 アクセスすると `Hello World! v2` と返すように web.py を編集します
 ```bash
-sed -i 's/Hello World!/Hello World! v2\\n/' web.py
+sed -i 's/Hello World!/Hello World! v2/' web.py
 ```
 
 ### 3-2. 更新したサンプルアプリケーションのデプロイ
@@ -111,7 +111,7 @@ gcloud compute forwarding-rules create --target-http-proxy=${LB_PREFIX}-tp --glo
 web.py を編集し、`demo-app-osaka` として asia-northeast2 にデプロイします
 ```bash
 # web.py の編集
-sed -i 's/Hello World! v2/Hello World! v2 Osaka\\n/' web.py
+sed -i 's/Hello World! v2/Hello World! v2 Osaka/' web.py
 
 # 編集したコードを asia-northeast2 にデプロイ
 gcloud beta run deploy demo-app-osaka --source . --platform managed --region asia-northeast2 --no-allow-unauthenticated
