@@ -6,10 +6,11 @@
 
 ## 1. 事前準備
 ### 1-1. API の有効化
-Cloud Run と Cloud Build の API を有効化します
+Cloud Run と Cloud Build, Compute Engine の API を有効化します
 ```bash
 gcloud services enable cloudbuild.googleapis.com \
-  run.googleapis.com
+  run.googleapis.com \
+  compute.googleapis.com
 ```
 
 ## 2. サンプルアプリケーションのデプロイ
@@ -93,9 +94,14 @@ Cloud Shell (外部) からのアクセスは拒否され、VPC 内クライア�
 curl ${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 
-# 同一プロジェクト内 VPC 上の VM からはアクセス可能
+# 疎通確認用 VM を作成
 gcloud compute instances create tokyo-client --zone asia-northeast1-a
-gcloud compute ssh tokyo-client --zone asia-northeast1-a -- curl ${SERVICE_URL} -H "Authorization: bearer $(gcloud auth print-identity-token)"
+gcloud compute ssh tokyo-client --zone asia-northeast1-a
+
+# 同一プロジェクト内 VPC 上の VM からはアクセス可能
+gcloud auth login
+curl <サービスURL> -H "Authorization: bearer $(gcloud auth print-identity-token)"
+exit
 ```
 
 ## 5. Cloud Run のマルチリージョンデプロイ
