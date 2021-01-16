@@ -179,7 +179,8 @@ gcloud compute backend-services add-backend ${LB_PREFIX}-bs \
 ```
 
 ### 5-5. 動作確認
-`asia-northeast1` と `asia-northeast2` のクライアントからそれぞれ同一 IP アドレスにアクセスし、それぞれ地理的に近い Cloud Run サービスにルーティングされることを確認します
+`asia-northeast1` と `asia-northeast2` のクライアントからそれぞれ同一 IP アドレスにアクセスし、それぞれ地理的に近い Cloud Run サービスにルーティングされることを確認します  
+設定反映まで数分程かかるので少し時間を空けてアクセスしてみてください
 ```bash
 # サービスアクセス用 IP アドレスの取得
 gcloud compute forwarding-rules describe ${LB_PREFIX}-fr \
