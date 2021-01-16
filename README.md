@@ -56,7 +56,12 @@ sed -i 's/Hello World!/Hello Tokyo!/' web.py
 更新したアプリケーションを `green` というタグを付け Cloud Run にデプロイします  
 `--no-traffic` を指定し、新バージョン側にトラフィックが来ないよう設定します
 ```bash
-gcloud beta run deploy demo-app --source . --platform managed --region asia-northeast1 --no-allow-unauthenticated --no-traffic --tag green
+gcloud beta run deploy demo-app --source . \
+  --platform managed \
+  --region asia-northeast1 \
+  --no-allow-unauthenticated \
+  --no-traffic \
+  --tag green
 ```
 
 ### 3-3. 新バージョンへの段階的移行
