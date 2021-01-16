@@ -148,14 +148,19 @@ gcloud compute backend-services add-backend ${LB_PREFIX}-bs --global --network-e
 ```bash
 # サービスアクセス用 IP アドレスの取得
 gcloud compute forwarding-rules describe ${LB_PREFIX}-fr --global --format="value(IPAddress)"
-export LBIP=<GCLB IP>
 
 # asia-northeast1 からのアクセス確認
-gcloud compute ssh tokyo-client --zone asia-northeast1-a -- curl ${LBIP} -H "Authorization: bearer $(gcloud auth print-identity-token)"
+gcloud compute ssh tokyo-client --zone asia-northeast1-a
+gcloud auth login
+curl <GCLB IP> -H "Authorization: bearer $(gcloud auth print-identity-token)"
+exit
 
 # asia-northeast2 からのアクセス確認
 gcloud compute instances create osaka-client --zone asia-northeast2-a
-gcloud compute ssh tokyo-client --zone asia-northeast2-a -- curl ${LBIP} -H "Authorization: bearer $(gcloud auth print-identity-token)"
+gcloud compute ssh tokyo-client --zone asia-northeast2-a
+gcloud auth login
+curl <GCLB IP> -H "Authorization: bearer $(gcloud auth print-identity-token)"
+exit
 ```
 
 以上
