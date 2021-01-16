@@ -20,30 +20,19 @@ git clone https://github.com/kkuchima/run-demo
 cd run-demo
 ```
 
-### 2-2. ソースコードからのデプロイ（認証なしアクセスを許容）
+### 2-2. ソースコードからのデプロイ
 `--source` を指定し、ソースコードから直接 Cloud Run へデプロイします  
-また、 `--allow-unauthenticated` を指定することにより、認証なしのアクセスを許容します
+また、 `--no-allow-unauthenticated` を指定することにより、認証なしのアクセスを禁止します
 ```bash
-gcloud beta run deploy demo-app --source . --platform managed --region asia-northeast1 --allow-unauthenticated
+gcloud beta run deploy demo-app --source . --platform managed --region asia-northeast1 --no-allow-unauthenticated
 ```
 
 ### 2-3. 動作確認
-無事デプロイした後は出力された Service URL に curl でリクエストを投げ、 `Hello World!` と表示されることを確認します
+デプロイ後に出力された Service URL に対して curl でリクエストを投げて動作確認をします  
+認証なしアクセスが拒否され、Authorization Header を付けアクセスすると `Hello World!` と表示されることを確認します
 ```bash
 export SERVICE_URL=<デプロイしたサービスの URL>
-curl ${SERVICE_URL}
-```
 
-## 3. 認証付きアクセスの構成
-### 3-1. 認証付きアクセス
-` --no-allow-unauthenticated` を指定しアップデートすることで、当該サービスに対する認証なしアクセスを禁止します
-```bash
-gcloud beta run services update demo-app --platform managed --region asia-northeast1 --no-allow-unauthenticated
-```
-
-### 3-2. 動作確認
-以下コマンドを実行し、認証なしアクセスが拒否されること、Authorization Header を付けるとアクセスが可能となることを確認します
-```bash
 # アクセスできない
 curl ${SERVICE_URL}
 
@@ -52,21 +41,21 @@ curl ${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 ```
 
-## 4. アプリケーションの更新
-### 4-1. web.py の編集
+## 3. アプリケーションの更新
+### 3-1. web.py の編集
 アクセスすると `Hello World! v2` と返すように web.py を編集します
 ```bash
 sed -i 's/Hello World!/Hello World! v2\\n/' web.py
 ```
 
-### 4-2. 更新したサンプルアプリケーションのデプロイ
+### 3-2. 更新したサンプルアプリケーションのデプロイ
 更新したアプリケーションを `green` というタグを付け Cloud Run にデプロイします  
 `--no-traffic` を指定し、新バージョン側にトラフィックが来ないよう設定します
 ```bash
 gcloud beta run deploy demo-app --source . --platform managed --region asia-northeast1 --no-allow-unauthenticated --no-traffic --tag green
 ```
 
-### 4-3. 新バージョンへの段階的移行
+### 3-3. 新バージョンへの段階的移行
 新バージョンへ段階的に移行していきます
 ```bash
 # タグ付き URL にアクセスし、新バージョン単体での挙動を確認
@@ -88,14 +77,14 @@ curl ${SERVICE_URL} \
   -H "Authorization: bearer $(gcloud auth print-identity-token)"
 ```
 
-## 5. 外部からのアクセスを制御する
-### 5-1. GCLB もしくは同一プロジェクト内 VPC からのトラフィックのみ許可
+## 4. 外部からのアクセスを制御する
+### 4-1. GCLB もしくは同一プロジェクト内 VPC からのトラフィックのみ許可
 `--ingress internal-and-cloud-load-balancing` を指定しアップデートすることで、外部からの直アクセスを禁止し、GCLB もしくは同一プロジェクト内 VPC からのトラフィックのみ許可するよう設定します
 ```bash
 gcloud beta run services update demo-app --platform managed --region asia-northeast1 --ingress internal-and-cloud-load-balancing
 ```
 
-### 5-2. 動作確認
+### 4-2. 動作確認
 Cloud Shell (外部) からのアクセスは拒否され、VPC 内クライアントからのアクセスが許容されることを確認します
 ```bash
 # Cloud Shell (外部) からはアクセス不可
@@ -107,8 +96,8 @@ gcloud compute instances create tokyo-client --zone asia-northeast1-a
 gcloud compute ssh tokyo-client --zone asia-northeast1-a -- curl ${SERVICE_URL} -H "Authorization: bearer $(gcloud auth print-identity-token)"
 ```
 
-## 6. Cloud Run のマルチリージョンデプロイ
-### 6-1. GCLB の準備
+## 5. Cloud Run のマルチリージョンデプロイ
+### 5-1. GCLB の準備
 マルチリージョンにデプロイした Cloud Run へのアクセスを捌く GCLB をデプロイします
 ```bash
 export LB_PREFIX="run-demo"
@@ -118,7 +107,7 @@ gcloud compute target-http-proxies create --url-map=${LB_PREFIX}-um ${LB_PREFIX}
 gcloud compute forwarding-rules create --target-http-proxy=${LB_PREFIX}-tp --global --ports=80 ${LB_PREFIX}-fr
 ```
 
-### 6-2. 別リージョンへのデプロイ
+### 5-2. 別リージョンへのデプロイ
 web.py を編集し、`demo-app-osaka` として asia-northeast2 にデプロイします
 ```bash
 # web.py の編集
@@ -128,7 +117,7 @@ sed -i 's/Hello World! v2/Hello World! v2 Osaka\\n/' web.py
 gcloud beta run deploy demo-app-osaka --source . --platform managed --region asia-northeast2 --no-allow-unauthenticated
 ```
 
-### 6-3. Serverless NEG の作成
+### 5-3. Serverless NEG の作成
 各 Cloud Run サービス用の NEG を作成します
 ```bash
 # asia-northeast1 用 NEG
@@ -136,10 +125,9 @@ gcloud compute network-endpoint-groups create run-neg  --region=asia-northeast1 
 
 # asia-northeast2 用 NEG
 gcloud compute network-endpoint-groups create run-neg-osaka  --region=asia-northeast2 --network-endpoint-type=SERVERLESS --cloud-run-service=demo-app-osaka
-
 ```
 
-### 6-4. NEG をバックエンドとして追加
+### 5-4. NEG をバックエンドとして追加
 作成した NEG を GCLB バックエンドとして追加します
 ```bash
 gcloud compute backend-services add-backend ${LB_PREFIX}-bs --global --network-endpoint-group=run-neg --network-endpoint-group-region=asia-northeast1
@@ -147,7 +135,7 @@ gcloud compute backend-services add-backend ${LB_PREFIX}-bs --global --network-e
 gcloud compute backend-services add-backend ${LB_PREFIX}-bs --global --network-endpoint-group=run-neg-osaka --network-endpoint-group-region=asia-northeast2
 ```
 
-### 6-5. 動作確認
+### 5-5. 動作確認
 `asia-northeast1` と `asia-northeast2` のクライアントからそれぞれ同一 IP アドレスにアクセスし、それぞれ地理的に近い Cloud Run サービスにルーティングされることを確認します
 ```bash
 # サービスアクセス用 IP アドレスの取得
