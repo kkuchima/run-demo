@@ -4,13 +4,13 @@
 - Google Cloud Project が作成されていること
 - 以降の手順は Cloud Shell 上での実行を想定しています
 
-## 1. 事前準備
+## 1. API 有効化
 ### 1-1. API の有効化
-Cloud Run と Cloud Build, Compute Engine の API を有効化します
+本手順で利用する API (Cloud Run, Cloud Build, Compute Engine) を有効化します
 ```bash
-gcloud services enable cloudbuild.googleapis.com \
-  run.googleapis.com \
-  compute.googleapis.com
+gcloud services enable run.googleapis.com \
+  compute.googleapis.com \
+  cloudbuild.googleapis.com
 ```
 
 ## 2. サンプルアプリケーションのデプロイ
@@ -35,7 +35,7 @@ gcloud beta run deploy demo-app --source . \
 デプロイ後に出力された Service URL に対して curl でリクエストを投げて動作確認をします  
 認証なしアクセスが拒否され、Authorization Header を付けアクセスすると `Hello World!` と表示されることを確認します
 ```bash
-export SERVICE_URL=<デプロイしたサービスの URL>
+export SERVICE_URL="$( gcloud run services describe demo-app --platform managed --region asia-northeast1 --format 'value(status.url)' )"
 
 # アクセスできない
 curl ${SERVICE_URL}
@@ -67,7 +67,7 @@ gcloud beta run deploy demo-app --source . \
 ### 3-3. 新バージョンへの段階的移行
 新バージョンへ段階的に移行していきます
 ```bash
-export SERVICE_URL_TAG=<新サービスのタグ付き URL>
+export SERVICE_URL_TAG="$( gcloud run services describe demo-app --platform managed --region asia-northeast1 --format 'value(status.traffic.url)' )"
 
 # タグ付き URL にアクセスし、新バージョン単体での挙動を確認
 curl ${SERVICE_URL_TAG} \
@@ -203,4 +203,3 @@ curl <GCLB IP> -H "Authorization: bearer $(gcloud auth print-identity-token)"
 exit
 ```
 
-以上
